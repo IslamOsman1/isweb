@@ -17,6 +17,7 @@ import Contact from './components/Contact';
 import FinalCTA from './components/FinalCTA';
 import Footer from './components/Footer';
 import Dashboard from './components/Dashboard';
+import SeoHead from './components/SeoHead';
 
 function Site() {
   return (
@@ -43,6 +44,7 @@ function App() {
   return (
     <LanguageProvider>
       <DataProvider>
+        <SeoHead />
         <CustomCursor />
         <Preloader />
         <ScrollToTop />
