@@ -32,7 +32,7 @@ export const translations = {
       email: 'البريد الإلكتروني', phone: 'الهاتف المحمول', address: 'موقعنا', addressValue: 'نعمل عن بُعد ونخدم العملاء عالميًا',
       nameLabel: 'الاسم', namePlace: 'اسمك الكريم', emailLabel: 'البريد', emailPlace: 'example@mail.com', serviceLabel: 'نوع الخدمة',
       opt1: 'تطوير موقع ويب', opt2: 'تطبيق جوال', opt3: 'نظام إدارة', opt4: 'استشارة', msgLabel: 'تفاصيل المشروع', msgPlace: 'أخبرنا كيف يمكننا مساعدتك...',
-      send: 'إرسال الطلب', sending: 'جاري الإرسال...', success: 'تم تسجيل رسالتك بنجاح! سنتواصل معك قريباً.'
+      send: 'إرسال الطلب', sending: 'جاري الإرسال...', success: 'تم إرسال رسالتك بنجاح. سنتواصل معك قريباً.', error: 'تعذر إرسال الرسالة الآن. حاول مرة أخرى.'
     },
     dashboard: {
       welcome: 'لوحة تحكم الأدمن', desc: 'تابع الطلبات، المشاريع، العملاء، والرسائل من مكان واحد.', logout: 'خروج',
@@ -72,7 +72,7 @@ export const translations = {
       title1: "Let's Start", title2: 'Your Next Project', desc: 'Whether you have a clear idea or a rough concept, our team is ready to turn your vision into a successful digital product.',
       email: 'Email Address', phone: 'Phone Number', address: 'Location', addressValue: 'Remote-first, serving clients globally',
       nameLabel: 'Full Name', namePlace: 'Your Name', emailLabel: 'Email', emailPlace: 'example@mail.com', serviceLabel: 'Service Type',
-      opt1: 'Web Development', opt2: 'Mobile App', opt3: 'Management System', opt4: 'Consultation', msgLabel: 'Project Details', msgPlace: 'How can we help you?', send: 'Send Request', sending: 'Sending...', success: 'Message captured successfully! We will contact you soon.'
+      opt1: 'Web Development', opt2: 'Mobile App', opt3: 'Management System', opt4: 'Consultation', msgLabel: 'Project Details', msgPlace: 'How can we help you?', send: 'Send Request', sending: 'Sending...', success: 'Your message was sent successfully. We will contact you soon.', error: 'We could not send your message right now. Please try again.'
     },
     dashboard: {
       welcome: 'Admin Dashboard', desc: 'Track requests, projects, clients, and messages in one place.', logout: 'Logout',
