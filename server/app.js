@@ -9,36 +9,42 @@ const app = express();
 const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://127.0.0.1:27017/isweb_studio';
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'change_this_admin_password';
 
-mongoose.set('strictQuery', true);
+let mongoReady = false;
+let mongoConnectionPromise = globalThis.__iswebMongoConnectionPromise;
 
-async function connectMongo() {
-  if (mongoose.connection.readyState === 1) return true;
-
-  if (!globalThis.__iswebMongoConnectionPromise) {
-    globalThis.__iswebMongoConnectionPromise = mongoose.connect(MONGODB_URI, {
-      serverSelectionTimeoutMS: 8000,
-      bufferCommands: false,
+if (!mongoConnectionPromise) {
+  mongoose.set('strictQuery', true);
+  mongoConnectionPromise = mongoose
+    .connect(MONGODB_URI)
+    .then(() => {
+      mongoReady = true;
+      console.log('MongoDB connected');
+    })
+    .catch((err) => {
+      mongoReady = false;
+      console.warn('MongoDB not connected:', err.message);
     });
-  }
 
-  await globalThis.__iswebMongoConnectionPromise;
-  return mongoose.connection.readyState === 1;
+  globalThis.__iswebMongoConnectionPromise = mongoConnectionPromise;
+} else if (mongoose.connection.readyState === 1) {
+  mongoReady = true;
 }
 
 app.use(
   cors({
-    origin(origin, callback) {
-      if (!origin) return callback(null, true);
-      const allowedOrigins = process.env.CLIENT_ORIGIN
-        ? process.env.CLIENT_ORIGIN.split(',').map((item) => item.trim()).filter(Boolean)
-        : ['http://localhost:5173'];
-      return callback(null, allowedOrigins.includes(origin));
-    },
-    credentials: true,
+    origin: process.env.CLIENT_ORIGIN
+      ? process.env.CLIENT_ORIGIN.split(',').map((origin) => origin.trim())
+      : ['http://localhost:5173'],
   }),
 );
-
 app.use(express.json({ limit: '15mb' }));
+
+app.use((_req, _res, next) => {
+  if (mongoose.connection.readyState === 1) {
+    mongoReady = true;
+  }
+  next();
+});
 
 function requireAdmin(req, res, next) {
   if (req.method === 'GET' && req.path === '/api/content') return next();
@@ -55,14 +61,7 @@ function makeCloudinarySignature(params, apiSecret) {
   return crypto.createHash('sha1').update(`${toSign}${apiSecret}`).digest('hex');
 }
 
-app.get('/api/health', async (_req, res) => {
-  let mongoReady = false;
-  try {
-    mongoReady = await connectMongo();
-  } catch {
-    mongoReady = false;
-  }
-
+app.get('/api/health', (_req, res) => {
   res.json({
     ok: true,
     mongoReady,
@@ -75,28 +74,16 @@ app.get('/api/health', async (_req, res) => {
 });
 
 app.get('/api/content', async (_req, res) => {
-  try {
-    await connectMongo();
-    const doc = await Content.findOne({ key: 'site' }).lean();
-    res.json(doc || null);
-  } catch (error) {
-    res.status(503).json({ error: 'MongoDB is not connected', details: error.message });
-  }
+  if (!mongoReady) return res.status(503).json({ error: 'MongoDB is not connected' });
+  const doc = await Content.findOne({ key: 'site' }).lean();
+  res.json(doc || null);
 });
 
 app.put('/api/content', requireAdmin, async (req, res) => {
-  try {
-    await connectMongo();
-    const payload = { ...req.body, key: 'site' };
-    const doc = await Content.findOneAndUpdate({ key: 'site' }, payload, {
-      new: true,
-      upsert: true,
-      setDefaultsOnInsert: true,
-    }).lean();
-    res.json(doc);
-  } catch (error) {
-    res.status(503).json({ error: 'MongoDB is not connected', details: error.message });
-  }
+  if (!mongoReady) return res.status(503).json({ error: 'MongoDB is not connected' });
+  const payload = { ...req.body, key: 'site' };
+  const doc = await Content.findOneAndUpdate({ key: 'site' }, payload, { new: true, upsert: true }).lean();
+  res.json(doc);
 });
 
 app.post('/api/upload', requireAdmin, async (req, res) => {

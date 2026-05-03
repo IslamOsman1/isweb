@@ -1,15 +1,11 @@
 # IsWeb Studio
 
-مشروع IsWeb Studio يعمل على Vercel مع واجهة React + Vite + Tailwind، ومع API Serverless يحافظ على MongoDB و Cloudinary.
+واجهة `React + Vite` مع لوحة تحكم `/admin` وواجهة API مبنية بـ `Express` وتخزين محتوى عبر `MongoDB`.
 
-## المهم
+## هيكل المشروع
 
-لم يتم حذف MongoDB أو السيرفر. الملفات التالية ما زالت موجودة وتعمل:
-
-- `server/app.js`
-- `server/server.js`
-- `server/models/Content.js`
-- `api/index.js` لاستخدام Express API على Vercel
+- `client/`: واجهة `React + Vite`
+- `server/`: API وملفات `Express` و`MongoDB`
 
 ## التشغيل المحلي
 
@@ -21,41 +17,60 @@ npm run dev:full
 
 - الموقع: `http://localhost:5173`
 - لوحة التحكم: `http://localhost:5173/admin`
-- API: `http://localhost:5050/api`
+- الـ API: `http://localhost:5050/api`
 
-## متغيرات البيئة المطلوبة على Vercel
+## إعداد ملف البيئة
 
-أضف من Settings > Environment Variables:
+عدّل القيم داخل `.env` بعد نسخه من `.env.example`:
 
-```env
+```bash
 MONGODB_URI=your_mongodb_connection_string
-ADMIN_PASSWORD=your_admin_password
-VITE_ADMIN_PASSWORD=your_admin_password
+PORT=5050
+CLIENT_ORIGIN=http://localhost:5173
 VITE_API_URL=/api
-CLIENT_ORIGIN=https://your-vercel-domain.vercel.app
+ADMIN_PASSWORD=change_this_admin_password
+VITE_ADMIN_PASSWORD=change_this_admin_password
+```
+
+مهم:
+
+- اجعل `ADMIN_PASSWORD` و `VITE_ADMIN_PASSWORD` نفس القيمة.
+- لا ترفع ملف `.env` إلى GitHub.
+- على Vercel أضف نفس المتغيرات من إعدادات المشروع.
+
+## Cloudinary
+
+لرفع الصور من لوحة التحكم أضف:
+
+```bash
 CLOUDINARY_CLOUD_NAME=your_cloud_name
 CLOUDINARY_API_KEY=your_api_key
 CLOUDINARY_API_SECRET=your_api_secret
 ```
 
-اجعل `ADMIN_PASSWORD` و `VITE_ADMIN_PASSWORD` نفس القيمة.
+إذا لم تضف مفاتيح Cloudinary سيستخدم المشروع صورة `base64` محليًا كحل بديل.
 
-## إعدادات Vercel
+## النشر على Vercel
 
-```txt
-Framework: Vite
-Build Command: npm run build
-Output Directory: client/dist
-Install Command: npm install
-```
+المشروع مجهز الآن لـ:
 
-## الاختبار
+- بناء الواجهة عبر `Vite`
+- تشغيل الـ API من خلال `Vercel Functions`
+- إعادة توجيه SPA بشكل صحيح عبر `vercel.json`
 
-```bash
-npm run build
-```
+بعد ربط المستودع في Vercel أضف متغيرات البيئة التالية:
 
-بعد النشر جرّب:
+- `MONGODB_URI`
+- `ADMIN_PASSWORD`
+- `VITE_ADMIN_PASSWORD`
+- `VITE_API_URL` وقيمتها `/api`
+- `CLIENT_ORIGIN` وضع رابط موقعك بعد النشر
+- `CLOUDINARY_CLOUD_NAME`
+- `CLOUDINARY_API_KEY`
+- `CLOUDINARY_API_SECRET`
 
-- `/api/health`
-- `/api/content`
+## ملاحظات
+
+- نقطة الصحة: `/api/health`
+- المحتوى العام: `/api/content`
+- رفع الصور: `/api/upload`
