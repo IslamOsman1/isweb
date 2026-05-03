@@ -43,10 +43,14 @@ mongodb+srv://username:password@cluster0.xxxxx.mongodb.net/?retryWrites=true&w=m
 1. اذهب إلى [vercel.com/dashboard](https://vercel.com/dashboard)
 2. افتح project `isweb-studio`
 3. اذهب إلى **Settings** → **Environment Variables**
-4. أضف المتغيرات:
+4. أضف المتغيرات في بيئة `Production`:
 
 ```
 MONGODB_URI=mongodb+srv://your_username:your_password@cluster0.xxxxx.mongodb.net/isweb_studio?retryWrites=true&w=majority
+
+مهم:
+- إذا كانت كلمة مرور MongoDB تحتوي على رموز مثل `@` أو `:` أو `/` أو `#` أو `%` فيجب تحويلها إلى `URL-encoded`.
+- لا تترك `MONGODB_URI` على قيمة `mongodb://127.0.0.1:27017/...` داخل Vercel لأن هذا يعمل محليًا فقط.
 ```
 
 **أضف أيضًا:**
@@ -86,9 +90,11 @@ Vercel ستقوم بـ redeploy تلقائيًا.
 
 2. تحقق من Connection String:
    - هل تحتوي على كلمة المرور الصحيحة؟
+   - هل كلمة المرور داخل الرابط `URL-encoded` إذا كانت تحتوي على رموز خاصة؟
    - هل لديك whitelist IP للـ MongoDB Atlas؟
      - اذهب إلى MongoDB Atlas → Security → Network Access
      - أضف `0.0.0.0/0` (السماح من أي IP)
+   - تأكد من وجود Database User في Atlas داخل `Security` → `Database Access`
 
 3. جرّب حفظ تغيير بسيط وتفقد Vercel logs:
    - `https://vercel.com/your-account/isweb-studio/deployments`

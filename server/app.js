@@ -6,9 +6,10 @@ import crypto from 'crypto';
 import Content from './models/Content.js';
 
 const app = express();
-const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://127.0.0.1:27017/isweb_studio';
+const MONGODB_URI = (process.env.MONGODB_URI || 'mongodb://127.0.0.1:27017/isweb_studio').trim();
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'change_this_admin_password';
 const ENV = process.env.VERCEL_ENV || process.env.NODE_ENV || 'development';
+const IS_PRODUCTION = ENV === 'production';
 
 // استخراج domain من referrer أو استخدام Vercel domain
 function getAllowedOrigins() {
@@ -45,24 +46,41 @@ function corsOrigin(origin, callback) {
 }
 
 let mongoReady = false;
+let mongoStatus = 'disconnected';
+let lastMongoError = null;
 let mongoConnectionPromise = globalThis.__iswebMongoConnectionPromise;
 
 if (!mongoConnectionPromise) {
   mongoose.set('strictQuery', true);
-  mongoConnectionPromise = mongoose
-    .connect(MONGODB_URI)
-    .then(() => {
-      mongoReady = true;
-      console.log('MongoDB connected');
-    })
-    .catch((err) => {
-      mongoReady = false;
-      console.warn('MongoDB not connected:', err.message);
-    });
+
+  if (IS_PRODUCTION && MONGODB_URI.startsWith('mongodb://127.0.0.1')) {
+    mongoStatus = 'misconfigured';
+    lastMongoError = 'Production deployment is still using the local MongoDB URI. Set MONGODB_URI in Vercel to your MongoDB Atlas connection string.';
+    mongoConnectionPromise = Promise.resolve();
+  } else {
+    mongoStatus = 'connecting';
+    mongoConnectionPromise = mongoose
+      .connect(MONGODB_URI, {
+        serverSelectionTimeoutMS: 10000,
+      })
+      .then(() => {
+        mongoReady = true;
+        mongoStatus = 'connected';
+        lastMongoError = null;
+        console.log('MongoDB connected');
+      })
+      .catch((err) => {
+        mongoReady = false;
+        mongoStatus = 'error';
+        lastMongoError = err.message;
+        console.warn('MongoDB not connected:', err.message);
+      });
+  }
 
   globalThis.__iswebMongoConnectionPromise = mongoConnectionPromise;
 } else if (mongoose.connection.readyState === 1) {
   mongoReady = true;
+  mongoStatus = 'connected';
 }
 
 app.use(
@@ -84,6 +102,7 @@ app.use(async (_req, _res, next) => {
 
   if (mongoose.connection.readyState === 1) {
     mongoReady = true;
+    mongoStatus = 'connected';
   }
 
   next();
@@ -108,6 +127,10 @@ app.get('/api/health', (_req, res) => {
   res.json({
     ok: true,
     mongoReady,
+    mongoStatus,
+    mongoConfigured: Boolean(process.env.MONGODB_URI),
+    isAtlasUri: MONGODB_URI.startsWith('mongodb+srv://') || MONGODB_URI.startsWith('mongodb://'),
+    mongoError: lastMongoError,
     cloudinaryReady: Boolean(
       process.env.CLOUDINARY_CLOUD_NAME &&
         process.env.CLOUDINARY_API_KEY &&
@@ -117,13 +140,17 @@ app.get('/api/health', (_req, res) => {
 });
 
 app.get('/api/content', async (_req, res) => {
-  if (!mongoReady) return res.status(503).json({ error: 'MongoDB is not connected' });
+  if (!mongoReady) {
+    return res.status(503).json({ error: 'MongoDB is not connected', details: lastMongoError });
+  }
   const doc = await Content.findOne({ key: 'site' }).lean();
   res.json(doc || null);
 });
 
 app.put('/api/content', requireAdmin, async (req, res) => {
-  if (!mongoReady) return res.status(503).json({ error: 'MongoDB is not connected' });
+  if (!mongoReady) {
+    return res.status(503).json({ error: 'MongoDB is not connected', details: lastMongoError });
+  }
   const payload = { ...req.body, key: 'site' };
   const doc = await Content.findOneAndUpdate({ key: 'site' }, payload, { new: true, upsert: true }).lean();
   res.json(doc);
