@@ -38,15 +38,23 @@ VITE_ADMIN_PASSWORD=change_this_admin_password
 - لا ترفع ملف `.env` إلى GitHub.
 - على Vercel أضف نفس المتغيرات من إعدادات المشروع.
 
-## Cloudinary
+## Cloudinary (رفع الصور للسحابة)
 
-لرفع الصور من لوحة التحكم أضف:
+لرفع الصور من لوحة التحكم أضف بيانات كلودينيري في `.env`:
 
 ```bash
 CLOUDINARY_CLOUD_NAME=your_cloud_name
 CLOUDINARY_API_KEY=your_api_key
 CLOUDINARY_API_SECRET=your_api_secret
 ```
+
+**اقرأ [CLOUDINARY_SETUP.md](./CLOUDINARY_SETUP.md) للتعليمات الكاملة** | **Read [CLOUDINARY_SETUP.md](./CLOUDINARY_SETUP.md) for full instructions**
+
+### الخطوات السريعة:
+1. أنشئ حساب مجاني على [Cloudinary.com](https://cloudinary.com)
+2. انسخ بيانات اعتمادك من [API Keys](https://cloudinary.com/console/settings/api-keys)
+3. أضفها إلى `.env`
+4. أعد تشغيل الخادم: `npm run dev:full`
 
 إذا لم تضف مفاتيح Cloudinary سيستخدم المشروع صورة `base64` محليًا كحل بديل.
 
