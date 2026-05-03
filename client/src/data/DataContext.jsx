@@ -51,10 +51,14 @@ export function DataProvider({ children }) {
     setContent(next);
     localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
     try {
-      await api('/content', { method: 'PUT', body: JSON.stringify(next) });
-      setIsOnlineDb(true);
-    } catch {
+      const result = await api('/content', { method: 'PUT', body: JSON.stringify(next) });
+      if (result) {
+        setIsOnlineDb(true);
+        console.log('✅ Data saved to MongoDB');
+      }
+    } catch (error) {
       setIsOnlineDb(false);
+      console.warn('⚠️ Failed to save to MongoDB. Data saved locally only.', error);
     }
   };
 

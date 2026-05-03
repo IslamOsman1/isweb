@@ -26,7 +26,7 @@ npm run dev:full
 ```bash
 MONGODB_URI=your_mongodb_connection_string
 PORT=5050
-CLIENT_ORIGIN=http://localhost:5173
+CLIENT_ORIGIN=http://localhost:5173,http://localhost:*,http://127.0.0.1:*,http://*:5173
 VITE_API_URL=/api
 ADMIN_PASSWORD=change_this_admin_password
 VITE_ADMIN_PASSWORD=change_this_admin_password
@@ -35,6 +35,7 @@ VITE_ADMIN_PASSWORD=change_this_admin_password
 مهم:
 
 - اجعل `ADMIN_PASSWORD` و `VITE_ADMIN_PASSWORD` نفس القيمة.
+- `CLIENT_ORIGIN` يسمح بالوصول من `localhost` و من أي جهاز آخر في نفس الشبكة
 - لا ترفع ملف `.env` إلى GitHub.
 - على Vercel أضف نفس المتغيرات من إعدادات المشروع.
 
@@ -55,6 +56,17 @@ CLOUDINARY_API_SECRET=your_api_secret
 2. انسخ بيانات اعتمادك من [API Keys](https://cloudinary.com/console/settings/api-keys)
 3. أضفها إلى `.env`
 4. أعد تشغيل الخادم: `npm run dev:full`
+
+---
+
+## مشكلة: التعديلات لا تظهر على أجهزة أخرى?
+
+**اقرأ [SYNC_GUIDE.md](./SYNC_GUIDE.md)** لحل مشكلة التعديلات المحلية والتزامن بين الأجهزة المختلفة.
+
+الحل الأساسي: تأكد من تشغيل الخادم الكامل:
+```bash
+npm run dev:full
+```
 
 إذا لم تضف مفاتيح Cloudinary سيستخدم المشروع صورة `base64` محليًا كحل بديل.
 
