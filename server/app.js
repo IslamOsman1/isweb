@@ -8,6 +8,34 @@ import Content from './models/Content.js';
 const app = express();
 const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://127.0.0.1:27017/isweb_studio';
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'change_this_admin_password';
+const ENV = process.env.VERCEL_ENV || process.env.NODE_ENV || 'development';
+
+// استخراج domain من referrer أو استخدام Vercel domain
+function getAllowedOrigins() {
+  const baseOrigins = [
+    'http://localhost:5173',
+    'http://localhost:3000',
+    'http://127.0.0.1:5173',
+    'http://127.0.0.1:3000',
+  ];
+
+  // في الإنتاج، أضف Vercel domain
+  if (process.env.VERCEL_URL) {
+    baseOrigins.push(`https://${process.env.VERCEL_URL}`);
+  }
+
+  // أضف أي custom domain
+  if (process.env.CUSTOM_DOMAIN) {
+    baseOrigins.push(`https://${process.env.CUSTOM_DOMAIN}`);
+  }
+
+  // أضف أي origins محددة من متغير البيئة
+  if (process.env.CLIENT_ORIGIN) {
+    baseOrigins.push(...process.env.CLIENT_ORIGIN.split(',').map((o) => o.trim()));
+  }
+
+  return baseOrigins;
+}
 
 let mongoReady = false;
 let mongoConnectionPromise = globalThis.__iswebMongoConnectionPromise;
@@ -32,9 +60,8 @@ if (!mongoConnectionPromise) {
 
 app.use(
   cors({
-    origin: process.env.CLIENT_ORIGIN
-      ? process.env.CLIENT_ORIGIN.split(',').map((origin) => origin.trim())
-      : ['http://localhost:5173'],
+    origin: getAllowedOrigins(),
+    credentials: true,
   }),
 );
 app.use(express.json({ limit: '15mb' }));

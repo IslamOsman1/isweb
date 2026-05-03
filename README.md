@@ -39,6 +39,8 @@ VITE_ADMIN_PASSWORD=change_this_admin_password
 - لا ترفع ملف `.env` إلى GitHub.
 - على Vercel أضف نفس المتغيرات من إعدادات المشروع.
 
+**اقرأ [VERCEL_DEPLOYMENT.md](./VERCEL_DEPLOYMENT.md) لتفاصيل نشر على Vercel مع MongoDB Atlas**
+
 ## Cloudinary (رفع الصور للسحابة)
 
 لرفع الصور من لوحة التحكم أضف بيانات كلودينيري في `.env`:
