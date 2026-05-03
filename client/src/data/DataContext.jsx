@@ -19,8 +19,18 @@ async function api(path, options = {}) {
     headers: { 'Content-Type': 'application/json', 'x-admin-password': ADMIN_PASSWORD },
     ...options,
   });
-  if (!res.ok) throw new Error('API request failed');
-  return res.json();
+  const text = await res.text();
+  let data;
+  try {
+    data = JSON.parse(text);
+  } catch {
+    data = text;
+  }
+  if (!res.ok) {
+    const message = data?.error || data || `API request failed: ${res.status} ${res.statusText}`;
+    throw new Error(message);
+  }
+  return data;
 }
 
 export function DataProvider({ children }) {
@@ -58,7 +68,7 @@ export function DataProvider({ children }) {
       }
     } catch (error) {
       setIsOnlineDb(false);
-      console.warn('⚠️ Failed to save to MongoDB. Data saved locally only.', error);
+      console.warn('⚠️ Failed to save to MongoDB. Data saved locally only.', error.message || error);
     }
   };
 

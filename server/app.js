@@ -19,22 +19,29 @@ function getAllowedOrigins() {
     'http://127.0.0.1:3000',
   ];
 
-  // في الإنتاج، أضف Vercel domain
   if (process.env.VERCEL_URL) {
     baseOrigins.push(`https://${process.env.VERCEL_URL}`);
   }
 
-  // أضف أي custom domain
   if (process.env.CUSTOM_DOMAIN) {
     baseOrigins.push(`https://${process.env.CUSTOM_DOMAIN}`);
   }
 
-  // أضف أي origins محددة من متغير البيئة
   if (process.env.CLIENT_ORIGIN) {
     baseOrigins.push(...process.env.CLIENT_ORIGIN.split(',').map((o) => o.trim()));
   }
 
-  return baseOrigins;
+  return baseOrigins.filter(Boolean);
+}
+
+function corsOrigin(origin, callback) {
+  if (!origin) return callback(null, true);
+  const allowedOrigins = getAllowedOrigins();
+  if (!process.env.CLIENT_ORIGIN && !process.env.VERCEL_URL && !process.env.CUSTOM_DOMAIN) {
+    return callback(null, true);
+  }
+  if (allowedOrigins.includes(origin)) return callback(null, true);
+  callback(new Error(`CORS not allowed for origin ${origin}`));
 }
 
 let mongoReady = false;
@@ -60,7 +67,7 @@ if (!mongoConnectionPromise) {
 
 app.use(
   cors({
-    origin: getAllowedOrigins(),
+    origin: corsOrigin,
     credentials: true,
   }),
 );
