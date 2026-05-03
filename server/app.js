@@ -73,10 +73,19 @@ app.use(
 );
 app.use(express.json({ limit: '15mb' }));
 
-app.use((_req, _res, next) => {
+app.use(async (_req, _res, next) => {
+  if (mongoose.connection.readyState !== 1 && mongoConnectionPromise) {
+    try {
+      await mongoConnectionPromise;
+    } catch (err) {
+      console.warn('MongoDB connection attempt failed:', err.message);
+    }
+  }
+
   if (mongoose.connection.readyState === 1) {
     mongoReady = true;
   }
+
   next();
 });
 
