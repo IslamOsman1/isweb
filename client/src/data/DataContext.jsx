@@ -2,7 +2,7 @@ import React, { createContext, useContext, useEffect, useMemo, useState } from '
 import { defaultContent } from './defaultContent';
 
 const STORAGE_KEY = 'isweb_content_v3';
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5050/api';
+const API_URL = import.meta.env.VITE_API_URL || '/api';
 const ADMIN_PASSWORD = import.meta.env.VITE_ADMIN_PASSWORD || 'admin123';
 const DataContext = createContext(null);
 
