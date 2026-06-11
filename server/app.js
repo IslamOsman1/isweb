@@ -49,38 +49,56 @@ let mongoReady = false;
 let mongoStatus = 'disconnected';
 let lastMongoError = null;
 let mongoConnectionPromise = globalThis.__iswebMongoConnectionPromise;
+if (mongoose.connection.readyState === 1) {
+  mongoReady = true;
+  mongoStatus = 'connected';
+}
 
-if (!mongoConnectionPromise) {
-  mongoose.set('strictQuery', true);
+mongoose.set('strictQuery', true);
+
+export function startMongoConnection() {
+  if (mongoose.connection.readyState === 1) {
+    mongoReady = true;
+    mongoStatus = 'connected';
+    lastMongoError = null;
+    return Promise.resolve();
+  }
+
+  if (mongoConnectionPromise) {
+    return mongoConnectionPromise;
+  }
 
   if (IS_PRODUCTION && MONGODB_URI.startsWith('mongodb://127.0.0.1')) {
+    mongoReady = false;
     mongoStatus = 'misconfigured';
     lastMongoError = 'Production deployment is still using the local MongoDB URI. Set MONGODB_URI in Vercel to your MongoDB Atlas connection string.';
     mongoConnectionPromise = Promise.resolve();
-  } else {
-    mongoStatus = 'connecting';
-    mongoConnectionPromise = mongoose
-      .connect(MONGODB_URI, {
-        serverSelectionTimeoutMS: 10000,
-      })
-      .then(() => {
-        mongoReady = true;
-        mongoStatus = 'connected';
-        lastMongoError = null;
-        console.log('MongoDB connected');
-      })
-      .catch((err) => {
-        mongoReady = false;
-        mongoStatus = 'error';
-        lastMongoError = err.message;
-        console.warn('MongoDB not connected:', err.message);
-      });
+    globalThis.__iswebMongoConnectionPromise = mongoConnectionPromise;
+    return mongoConnectionPromise;
   }
 
+  mongoReady = false;
+  mongoStatus = 'connecting';
+  lastMongoError = null;
+  mongoConnectionPromise = mongoose
+    .connect(MONGODB_URI, {
+      serverSelectionTimeoutMS: 10000,
+    })
+    .then(() => {
+      mongoReady = true;
+      mongoStatus = 'connected';
+      lastMongoError = null;
+      console.log('MongoDB connected');
+    })
+    .catch((err) => {
+      mongoReady = false;
+      mongoStatus = 'error';
+      lastMongoError = err.message;
+      console.warn('MongoDB not connected:', err.message);
+    });
+
   globalThis.__iswebMongoConnectionPromise = mongoConnectionPromise;
-} else if (mongoose.connection.readyState === 1) {
-  mongoReady = true;
-  mongoStatus = 'connected';
+  return mongoConnectionPromise;
 }
 
 app.use(
@@ -91,21 +109,8 @@ app.use(
 );
 app.use(express.json({ limit: '15mb' }));
 
-app.use(async (_req, _res, next) => {
-  if (mongoose.connection.readyState !== 1 && mongoConnectionPromise) {
-    try {
-      await mongoConnectionPromise;
-    } catch (err) {
-      console.warn('MongoDB connection attempt failed:', err.message);
-    }
-  }
-
-  if (mongoose.connection.readyState === 1) {
-    mongoReady = true;
-    mongoStatus = 'connected';
-  }
-
-  next();
+app.get('/ping', (_req, res) => {
+  res.status(200).type('text/plain').send('OK');
 });
 
 function requireAdmin(req, res, next) {
@@ -143,17 +148,25 @@ app.get('/api/content', async (_req, res) => {
   if (!mongoReady) {
     return res.status(503).json({ error: 'MongoDB is not connected', details: lastMongoError });
   }
-  const doc = await Content.findOne({ key: 'site' }).lean();
-  res.json(doc || null);
+  try {
+    const doc = await Content.findOne({ key: 'site' }).lean();
+    res.json(doc || null);
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to load content', details: error.message });
+  }
 });
 
 app.put('/api/content', requireAdmin, async (req, res) => {
   if (!mongoReady) {
     return res.status(503).json({ error: 'MongoDB is not connected', details: lastMongoError });
   }
-  const payload = { ...req.body, key: 'site' };
-  const doc = await Content.findOneAndUpdate({ key: 'site' }, payload, { new: true, upsert: true }).lean();
-  res.json(doc);
+  try {
+    const payload = { ...req.body, key: 'site' };
+    const doc = await Content.findOneAndUpdate({ key: 'site' }, payload, { new: true, upsert: true }).lean();
+    res.json(doc);
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to save content', details: error.message });
+  }
 });
 
 app.post('/api/upload', requireAdmin, async (req, res) => {

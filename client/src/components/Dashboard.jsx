@@ -26,7 +26,22 @@ const emptyBySection = {
   faqs: { qAr: '', qEn: '', aAr: '', aEn: '' },
 };
 
-const imageFields = new Set(['img', 'heroImage']);
+const imageFields = new Set(['img', 'heroImage', 'seoImage']);
+const fieldLabels = {
+  brandName: 'Brand Name',
+  siteUrl: 'Site URL',
+  heroImage: 'Hero Image',
+  seoImage: 'SEO Image',
+  seoTitleAr: 'SEO Title AR',
+  seoTitleEn: 'SEO Title EN',
+  seoDescriptionAr: 'SEO Description AR',
+  seoDescriptionEn: 'SEO Description EN',
+  seoKeywordsAr: 'SEO Keywords AR',
+  seoKeywordsEn: 'SEO Keywords EN',
+  facebookUrl: 'Facebook URL',
+  instagramUrl: 'Instagram URL',
+  githubUrl: 'GitHub URL',
+};
 
 function LoginScreen({ onLogin }) {
   const { lang, toggleLanguage } = useLanguage();
@@ -50,7 +65,7 @@ function LoginScreen({ onLogin }) {
 function Field({ name, value, onChange, uploadImage }) {
   const [uploading, setUploading] = useState(false);
   const isLong = /desc|quote|message|aAr|aEn/.test(name);
-  const label = name.replace(/([A-Z])/g, ' $1');
+  const label = fieldLabels[name] || name.replace(/([A-Z])/g, ' $1');
   const cls = 'w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-[#00b4db]';
 
   const handleFile = async (e) => {
@@ -104,7 +119,25 @@ function DashboardInner() {
   const logout = () => { sessionStorage.removeItem('isweb_admin_auth'); window.location.href = '/admin'; };
 
   const mainTitle = activeTab === 'settings' ? (lang === 'ar' ? 'إعدادات الموقع والروابط' : 'Website settings and links') : tabs.find((tab) => tab.id === activeTab)?.label;
-  const settingFields = ['brandName', 'email', 'phone', 'addressAr', 'addressEn', 'heroImage', 'facebookUrl', 'instagramUrl', 'githubUrl'];
+  const settingFields = [
+    'brandName',
+    'siteUrl',
+    'email',
+    'phone',
+    'addressAr',
+    'addressEn',
+    'heroImage',
+    'seoImage',
+    'seoTitleAr',
+    'seoTitleEn',
+    'seoDescriptionAr',
+    'seoDescriptionEn',
+    'seoKeywordsAr',
+    'seoKeywordsEn',
+    'facebookUrl',
+    'instagramUrl',
+    'githubUrl',
+  ];
 
   return <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="min-h-screen relative z-10 pt-8 pb-16"><div className="container mx-auto px-6"><header className="flex flex-col lg:flex-row justify-between gap-6 lg:items-center mb-8"><div><p className="text-[#00b4db] font-black text-sm mb-2">/admin</p><h1 className="text-4xl md:text-5xl font-black">{lang === 'ar' ? 'لوحة تحكم الأدمن' : 'Admin Dashboard'}</h1><p className="text-gray-400 mt-3">{lang === 'ar' ? 'تحكم كامل في الموقع: المحتوى، الصور، الوظائف، وروابط التواصل.' : 'Full control over content, images, jobs, and social links.'}</p></div><div className="flex flex-wrap gap-3"><a href="/" className="px-4 py-3 rounded-xl bg-white/5 border border-white/10">{lang === 'ar' ? 'عرض الموقع' : 'View site'}</a><button onClick={toggleLanguage} className="px-4 py-3 rounded-xl bg-white/5 border border-white/10">{lang === 'ar' ? 'English' : 'العربية'}</button><button onClick={logout} className="px-4 py-3 rounded-xl bg-red-500/10 border border-red-500/20 text-red-200 flex items-center gap-2"><LogOut size={18} />{lang === 'ar' ? 'خروج' : 'Logout'}</button></div></header>
 

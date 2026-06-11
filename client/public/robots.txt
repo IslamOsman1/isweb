@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://isweb.studio/sitemap.xml
+Sitemap: https://iswebstudio.tech/sitemap.xml

@@ -2,9 +2,20 @@ import React, { createContext, useState, useContext, useEffect } from 'react';
 import { translations } from './translations';
 
 const LanguageContext = createContext();
+const LANGUAGE_STORAGE_KEY = 'isweb_lang';
+
+function getInitialLanguage() {
+  const urlLang = new URLSearchParams(window.location.search).get('lang');
+  if (urlLang === 'ar' || urlLang === 'en') return urlLang;
+
+  const savedLang = localStorage.getItem(LANGUAGE_STORAGE_KEY);
+  if (savedLang === 'ar' || savedLang === 'en') return savedLang;
+
+  return 'ar';
+}
 
 export const LanguageProvider = ({ children }) => {
-  const [lang, setLang] = useState('ar');
+  const [lang, setLang] = useState(getInitialLanguage);
 
   const t = (path) => {
     const keys = path.split('.');
@@ -22,6 +33,11 @@ export const LanguageProvider = ({ children }) => {
   useEffect(() => {
     document.documentElement.dir = lang === 'ar' ? 'rtl' : 'ltr';
     document.documentElement.lang = lang;
+    localStorage.setItem(LANGUAGE_STORAGE_KEY, lang);
+
+    const url = new URL(window.location.href);
+    url.searchParams.set('lang', lang);
+    window.history.replaceState({}, '', `${url.pathname}${url.search}${url.hash}`);
   }, [lang]);
 
   return (
